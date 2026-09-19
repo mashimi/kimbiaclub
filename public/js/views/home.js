@@ -5,6 +5,18 @@ import { h, monthKey } from '../ui.js';
 export function renderHome(view) {
   view.innerHTML = '';
 
+  // Quick-nav row — visible fallback navigation (esp. on iPhone Safari)
+  view.append(h('div', { class: 'row', style: 'margin-bottom:14px;flex-wrap:wrap' },
+    h('a', { href: '#/home', style: 'flex:1' },
+      h('button', { class: 'btn secondary small', style: 'width:100%;border-color:var(--green)' }, '🏠 Home')),
+    h('a', { href: '#/clubs', style: 'flex:1' },
+      h('button', { class: 'btn secondary small', style: 'width:100%' }, '👥 Clubs')),
+    h('a', { href: '#/events', style: 'flex:1' },
+      h('button', { class: 'btn secondary small', style: 'width:100%' }, '📅 Events')),
+    h('a', { href: '#/profile', style: 'flex:1' },
+      h('button', { class: 'btn secondary small', style: 'width:100%' }, '👤 Profile')),
+  ));
+
   // Club of the Month banner (latest award doc)
   getDoc(doc(db, 'awards', monthKey(-1))).then((s) => {
     if (!s.exists()) return;
