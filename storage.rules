@@ -1,0 +1,15 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /clubs/{clubId}/logo.png {
+      allow read: if true;
+      allow write: if request.auth != null
+        && firestore.get(/databases/(default)/documents/clubs/$(clubId)).data.ownerId
+             == request.auth.uid;
+    }
+    match /users/{uid}/avatar.jpg {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}

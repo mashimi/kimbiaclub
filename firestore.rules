@@ -1,0 +1,129 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function platformAdmin() {
+      return signedIn() && request.auth.token.get('admin', false) == true;
+    }
+    function clubRole(clubId) {
+      return signedIn()
+        ? get(/databases/$(db)/documents/clubs/$(clubId)/members/$(uid()))
+            .data.get('role', 'none')
+        : 'none';
+    }
+    function isClubAdmin(clubId) { return clubRole(clubId) in ['owner','admin']; }
+    function isClubMember(clubId) {
+      return isClubAdmin(clubId) || clubRole(clubId) in ['pacer','member'];
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && uid() == userId;
+      allow delete: if platformAdmin();
+    }
+
+    match /clubs/{clubId} {
+      allow read: if true;
+      allow create: if platformAdmin()
+        || (signedIn() && request.resource.data.ownerId == uid()
+            && request.resource.data.tier == 'free'
+            && request.resource.data.claimed == true);
+      // Admins update anything; members may ONLY bump the stats block
+      // (client-side aggregation replaces Cloud Functions in no-Blaze mode).
+      allow update: if platformAdmin() || isClubAdmin(clubId)
+        || (isClubMember(clubId)
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['stats.totalKm', 'stats.runCount', 'stats.last7Active', 'stats.lastActivityAt']));
+      allow delete: if platformAdmin();
+
+      match /members/{memberId} {
+        allow read: if signedIn() && (memberId == uid() || isClubMember(clubId));
+        allow create: if signedIn() && memberId == uid() && (
+          (request.resource.data.role == 'member'
+            && request.resource.data.status == 'pending')
+          || (request.resource.data.role == 'owner'
+              && request.resource.data.status == 'active'
+              && get(/databases/$(db)/documents/clubs/$(clubId)).data.ownerId == uid()));
+        allow update: if isClubAdmin(clubId)
+          || (memberId == uid()
+              && resource.data.status == 'pending'
+              && request.resource.data.status == 'left'
+              && request.resource.data.diff(resource.data).affectedKeys()
+                   .hasOnly(['status']));
+        allow delete: if isClubAdmin(clubId) || platformAdmin();
+      }
+
+      match /announcements/{annId} {
+        allow read: if signedIn() && isClubMember(clubId);
+        allow create: if signedIn() && isClubAdmin(clubId);
+        allow update, delete: if isClubAdmin(clubId) || platformAdmin();
+      }
+    }
+
+    match /activities/{activityId} {
+      // No-Blaze mode: source 'gps' is league-verified by the client itself;
+      // manual/timeline runs stay unverified.
+      allow create: if signedIn() && request.resource.data.userId == uid()
+        && request.resource.data.verified == false
+        && request.resource.data.source in ['manual', 'gps', 'timeline'];
+      allow read: if signedIn();
+      allow update, delete: if resource.data.userId == uid() || platformAdmin();
+    }
+
+    match /routes/{routeId} {
+      allow read: if true;
+      allow create: if signedIn()
+        && (request.resource.data.clubId == null || isClubAdmin(request.resource.data.clubId));
+      allow update, delete: if platformAdmin()
+        || (resource.data.clubId != null && isClubAdmin(resource.data.clubId));
+      match /records/{r} { allow read: if true; allow write: if false; }
+    }
+
+    match /events/{eventId} {
+      allow read: if true;
+      // Manual payments: any club can run a paid event (they collect on their
+      // own number and confirm themselves). No API gate needed.
+      allow create: if signedIn() && isClubAdmin(request.resource.data.clubId);
+      allow update, delete: if platformAdmin() || isClubAdmin(resource.data.clubId)
+        // No-Blaze mode: registrants may ONLY bump the counter
+        || (signedIn()
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['registeredCount']));
+      match /registrations/{regId} {
+        allow read: if signedIn() && (regId == uid()
+          || isClubAdmin(get(/databases/$(db)/documents/events/$(eventId)).data.clubId));
+        // Free events (feeTzs == 0): instant self-confirm.
+        // Paid events: pending only — a runner can NEVER confirm their own payment.
+        allow create: if signedIn() && regId == uid() && (
+          (request.resource.data.status == 'pending'
+            && request.resource.data.amountPaid == 0)
+          || (request.resource.data.status == 'paid'
+              && request.resource.data.amountPaid == 0
+              && get(/databases/$(db)/documents/events/$(eventId)).data.feeTzs == 0));
+        allow update, delete: if platformAdmin()
+          || isClubAdmin(get(/databases/$(db)/documents/events/$(eventId)).data.clubId)
+          // runner may only cancel their own pending (unpaid) registration
+          || (regId == uid()
+              && resource.data.status == 'pending'
+              && request.resource.data.status == 'left'
+              && request.resource.data.diff(resource.data).affectedKeys()
+                   .hasOnly(['status']));
+      }
+    }
+
+    // Pro subscription upgrade requests (manual payment, platform-verified)
+    match /subrequests/{reqId} {
+      allow create: if signedIn() && isClubAdmin(request.resource.data.clubId)
+        && request.resource.data.status == 'pending';
+      allow read: if platformAdmin()
+        || (signedIn() && isClubAdmin(request.resource.data.clubId));
+      allow update, delete: if platformAdmin();
+    }
+
+    // No-Blaze mode: the platform console publishes standings client-side.
+    match /leaderboards/{document=**} { allow read: if true; allow write: if platformAdmin(); }
+    match /awards/{document=**}       { allow read: if true; allow write: if platformAdmin(); }
+    match /config/{docId} { allow read: if signedIn(); allow write: if platformAdmin(); }
+  }
+}

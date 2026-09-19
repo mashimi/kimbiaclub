@@ -1,0 +1,30 @@
+{
+  "indexes": [
+    { "collectionGroup": "activities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath":"clubId","order":"ASCENDING"},
+                 {"fieldPath":"startedAt","order":"DESCENDING"}]},
+    { "collectionGroup": "activities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath":"clubId","order":"ASCENDING"},
+                 {"fieldPath":"source","order":"ASCENDING"},
+                 {"fieldPath":"startedAt","order":"DESCENDING"}]},
+    { "collectionGroup": "activities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath":"userId","order":"ASCENDING"},
+                 {"fieldPath":"startedAt","order":"DESCENDING"}]},
+    { "collectionGroup": "activities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath":"userId","order":"ASCENDING"},
+                 {"fieldPath":"source","order":"ASCENDING"},
+                 {"fieldPath":"startedAt","order":"DESCENDING"}]},
+    { "collectionGroup": "members", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath":"status","order":"ASCENDING"},
+                 {"fieldPath":"joinedAt","order":"DESCENDING"}]},
+    { "collectionGroup": "members", "queryScope": "COLLECTION_GROUP",
+      "fields": [{"fieldPath":"userId","order":"ASCENDING"},
+                 {"fieldPath":"status","order":"ASCENDING"}]},
+    { "collectionGroup": "events", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath":"clubId","order":"ASCENDING"},
+                 {"fieldPath":"startAt","order":"ASCENDING"}]},
+    { "collectionGroup": "registrations", "queryScope": "COLLECTION_GROUP",
+      "fields": [{"fieldPath":"clubId","order":"ASCENDING"},
+                 {"fieldPath":"status","order":"ASCENDING"}]}
+  ]
+}
