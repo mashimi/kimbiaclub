@@ -7,3 +7,7 @@ firestore-debug.log
 ui-debug.log
 *.local
 .firebase/ 
+
+# Local Netlify folder
+.netlify
+.netlify/ 
