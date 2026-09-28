@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="/icon-512.png">
 <link rel="manifest" href="/manifest.json">
 <title>Kimbia TZ — League of Tanzanian Running Clubs</title>
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=5">
 <script type="importmap">
 {
   "imports": {
@@ -24,24 +24,43 @@
 </script>
 </head>
 <body>
-  <header id="topbar" class="hidden">
+  <header id="topbar">
     <a class="brand" href="#/home">🏃 KIMBIA <span>TZ</span></a>
-    <div id="topbar-right"></div>
+    <div id="topbar-right">
+      <a href="#/home" class="top-nav-link" data-route="home">🏆 Standings</a>
+      <a href="#/clubs" class="top-nav-link" data-route="clubs">👥 Clubs</a>
+      <a href="#/events" class="top-nav-link" data-route="events">📅 Events</a>
+      <a href="#/profile" class="top-nav-link" data-route="profile">👤 Profile</a>
+    </div>
   </header>
 
   <main id="view"><div class="boot">Loading…</div></main>
 
-  <nav id="bottomnav" class="hidden">
-    <a href="#/home" data-route="home">🏆<span>League</span></a>
-    <a href="#/clubs" data-route="clubs">👥<span>Clubs</span></a>
-    <a href="#/track" class="navfab" title="Track run">🏃</a>
-    <a href="#/events" data-route="events">📅<span>Events</span></a>
-    <a href="#/profile" data-route="profile">👤<span>Profile</span></a>
+  <nav id="bottomnav">
+    <a href="#/home" data-route="home">
+      <span class="nav-icon">🏆</span>
+      <span>League</span>
+    </a>
+    <a href="#/clubs" data-route="clubs">
+      <span class="nav-icon">👥</span>
+      <span>Clubs</span>
+    </a>
+    <a href="#/track" class="navfab" title="Track run">
+      <span class="fab-icon">🏃</span>
+    </a>
+    <a href="#/events" data-route="events">
+      <span class="nav-icon">📅</span>
+      <span>Events</span>
+    </a>
+    <a href="#/profile" data-route="profile">
+      <span class="nav-icon">👤</span>
+      <span>Profile</span>
+    </a>
   </nav>
 
   <div id="modal-root"></div>
   <div id="toast-root"></div>
   <div id="recaptcha-container"></div>
-  <script type="module" src="js/app.js?v=4"></script>
+  <script type="module" src="js/app.js?v=5"></script>
 </body>
 </html>

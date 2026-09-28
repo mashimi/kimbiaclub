@@ -36,22 +36,55 @@ function route() {
   const view = $('#view');
   view.innerHTML = '';
   const hash = location.hash || '#/home';
-  if (!state.user) { renderLogin(view); return; }
-  if (!state.profile) { renderSetup(view); return; }
+  
+  // Ensure topbar and bottomnav are always visible
+  paintNav(hash);
+
+  const protectedRoutes = ['#/profile', '#/log', '#/track', '#/create-club', '#/import'];
+  const isProtected = protectedRoutes.some(p => hash.startsWith(p)) || hash.startsWith('#/admin');
+
+  if (isProtected && !state.user) {
+    renderLogin(view);
+    return;
+  }
+  
+  if (state.user && !state.profile) {
+    renderSetup(view);
+    return;
+  }
 
   for (const [re, fn] of routes) {
     const m = hash.match(re);
-    if (m) { fn(view, m); paintNav(hash); return; }
+    if (m) {
+      fn(view, m);
+      paintNav(hash);
+      return;
+    }
   }
   location.hash = '#/home';
 }
 
 function paintNav(hash) {
   const nav = $('#bottomnav');
-  nav.classList.remove('hidden');
-  $('#topbar').classList.remove('hidden');
-  for (const a of nav.querySelectorAll('a[data-route]')) {
-    a.classList.toggle('active', hash.startsWith(`#/${a.dataset.route}`));
+  if (nav) nav.classList.remove('hidden');
+  const topbar = $('#topbar');
+  if (topbar) topbar.classList.remove('hidden');
+
+  const currentRoute = (hash || '#/home').replace('#/', '').split('/')[0] || 'home';
+
+  // Highlight bottomnav icons
+  if (nav) {
+    for (const a of nav.querySelectorAll('a[data-route]')) {
+      a.classList.toggle('active', a.dataset.route === currentRoute);
+    }
+  }
+
+  // Highlight topbar-right links
+  const topbarRight = $('#topbar-right');
+  if (topbarRight) {
+    for (const a of topbarRight.querySelectorAll('a[data-route]')) {
+      a.classList.toggle('active', a.dataset.route === currentRoute);
+    }
   }
 }
 
@@ -74,10 +107,7 @@ onAuthStateChanged(auth, async (user) => {
   state.user = user;
   state.profile = null;
   if (!user) {
-    $('#bottomnav').classList.add('hidden');
-    $('#topbar').classList.add('hidden');
-    $('#topbar-right').innerHTML = '';
-    renderLogin($('#view'));
+    route();
     return;
   }
   // Ensure a user profile doc exists
@@ -95,7 +125,6 @@ onAuthStateChanged(auth, async (user) => {
     toast('Karibu Kimbia TZ! 👋');
   }
   await loadRoles(user);
-  $('#topbar-right').innerHTML = '';
   route();
 });
 

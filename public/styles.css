@@ -14,6 +14,10 @@ input, select, textarea, button { font: inherit; }
   border-bottom: 1px solid var(--outline); }
 .brand { font-weight: 900; letter-spacing: 2px; font-size: 17px; }
 .brand span { color: var(--green); }
+#topbar-right { display: flex; align-items: center; gap: 8px; }
+.top-nav-link { font-size: 13px; font-weight: 700; color: var(--muted); padding: 6px 12px; border-radius: 8px; transition: all 0.2s ease; text-decoration: none; }
+.top-nav-link:hover, .top-nav-link.active { color: var(--green); background: rgba(0, 200, 83, 0.12); }
+
 #view { max-width: 720px; margin: 0 auto; padding: 18px 16px; }
 .boot { text-align: center; padding: 60px 0; color: var(--muted); }
 
@@ -21,14 +25,17 @@ input, select, textarea, button { font: inherit; }
 #bottomnav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; display: flex;
   justify-content: space-around; align-items: center; height: calc(68px + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
-  background: var(--surface); border-top: 1px solid var(--outline); }
+  background: rgba(19, 26, 22, 0.96); border-top: 1px solid var(--outline); backdrop-filter: blur(12px); }
 #bottomnav a { display: flex; flex-direction: column; align-items: center; gap: 2px;
-  font-size: 11px; color: var(--faint); font-weight: 700; flex: 1; }
+  font-size: 11px; color: var(--muted); font-weight: 700; flex: 1; transition: all 0.2s ease; text-decoration: none; }
+#bottomnav a .nav-icon { font-size: 20px; line-height: 1; transition: transform 0.2s ease; }
 #bottomnav a.active { color: var(--green); }
-#bottomnav a span { font-size: 10px; }
-.navfab { width: 58px; height: 58px; background: var(--green); color: #000 !important;
-  border-radius: 50%; font-size: 26px !important; margin-top: -30px;
-  box-shadow: 0 6px 20px rgba(0,200,83,.35); justify-content: center !important; }
+#bottomnav a.active .nav-icon { transform: scale(1.15); filter: drop-shadow(0 0 6px rgba(0,200,83,0.5)); }
+#bottomnav a span { font-size: 11px; font-weight: 700; }
+.navfab { width: 52px; height: 52px; background: var(--green); color: #000 !important;
+  border-radius: 50%; margin-top: -22px;
+  box-shadow: 0 6px 20px rgba(0,200,83,.45); display: flex; align-items: center; justify-content: center !important; }
+.navfab .fab-icon { font-size: 26px; }
 
 /* primitives */
 .card { background: var(--surface); border: 1px solid var(--outline);
