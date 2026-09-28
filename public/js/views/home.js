@@ -31,7 +31,7 @@ export function renderHome(view) {
           target: '_blank',
           class: 'btn primary small',
           style: 'background: #E5A93C; color: #000; text-decoration: none; font-weight: bold;'
-        }, '📥 Download APK'),
+        }, '📲 Get App (Android & iOS)'),
         h('a', {
           href: '#/clubs',
           class: 'btn secondary small',
