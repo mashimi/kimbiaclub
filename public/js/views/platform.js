@@ -4,7 +4,7 @@ import { collection, doc, onSnapshot, orderBy, query, where, getDoc, getDocs,
 import { h, Fmt, toast, spinner } from '../ui.js';
 import { scoreClub } from '../stats.js';
 
-const SEED = [
+const SEED_6_CLUBS = [
   { name: 'The Runners Club (TRC)', city: 'Dar es Salaam', hq: 'Samora Avenue',
     schedule: [{ days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], time: null, type: 'structured group runs' }],
     tags: ['competitive', 'social', 'events'],
@@ -13,14 +13,14 @@ const SEED = [
   { name: 'iRun Club Tanzania', city: 'Dar es Salaam', hq: 'Tips Coco, Coco Beach',
     schedule: [{ days: ['Sat'], time: '06:00', type: 'timed 5K/8K/10K PB challenge' }],
     tags: ['social', 'youth', 'competitive'], links: { instagram: 'https://www.instagram.com/irunclubtz/' } },
-  { name: 'Utu Kwanza Tribe', city: 'Dar es Salaam', hq: null,
-    schedule: [{ days: null, time: null, type: 'weekly sessions — variable routes' }],
+  { name: 'Utu Kwanza Tribe', city: 'Dar es Salaam', hq: 'Msasani Peninsula',
+    schedule: [{ days: ['Tue', 'Thu', 'Sat'], time: '05:45', type: 'weekly sessions — variable routes' }],
     tags: ['charity', 'beginner-friendly', 'free'], links: { website: 'https://www.utukwanzatribe.co.tz' } },
   { name: 'Team Fit Tanzania', city: 'Dar es Salaam', hq: 'Kinondoni',
-    schedule: [{ days: ['Mon', 'Wed', 'Sat'], time: null, type: 'group training' }],
+    schedule: [{ days: ['Mon', 'Wed', 'Sat'], time: '06:00', type: 'group fitness & track training' }],
     tags: ['wellness', 'beginner-friendly'], links: {} },
   { name: 'Dovya Jogging Sport Club', city: 'Dar es Salaam', hq: 'Yombo Dovya Road',
-    schedule: [{ days: ['Sat', 'Sun'], time: null, type: 'group jogging + aerobics' }],
+    schedule: [{ days: ['Sat', 'Sun'], time: '06:30', type: 'group jogging + aerobics' }],
     tags: ['grassroots', 'community'], links: {} },
   { name: 'Arusha Run Club', city: 'Arusha', hq: 'Ngorongoro Building',
     schedule: [{ days: ['Sat'], time: '06:45', type: 'weekly run (city + Mt. Meru trails)' }],
@@ -30,24 +30,85 @@ const SEED = [
 
 export async function renderPlatform(view) {
   view.innerHTML = ''; view.append(spinner());
-  const token = await auth.currentUser.getIdTokenResult(true);
-  if (!token.claims.admin) {
+  const token = await auth.currentUser?.getIdTokenResult(true).catch(() => null);
+  
+  if (!token?.claims?.admin) {
     view.innerHTML = '';
     view.append(h('div', { class: 'card', style: 'text-align:center;padding:40px' },
-      h('h2', {}, '🔒 Platform admin only')));
+      h('h2', {}, '🔒 Platform admin only'),
+      h('p', { class: 'muted' }, 'Run admin setup script or sign in with admin account.')));
     return;
   }
-  view.innerHTML = '';
-  view.append(h('h1', {}, '🛠 Platform console'));
 
-  // Pending Pro subscriptions
-  view.append(h('h2', {}, 'Pro payment requests'));
+  view.innerHTML = '';
+  view.append(h('h1', {}, '🛠 Platform Console'));
+
+  // ─── 1. Running Clubs Verification & Management ───
+  view.append(
+    h('div', { class: 'spread', style: 'margin-top:20px; align-items: center;' },
+      h('h2', { style: 'margin:0;' }, '🏢 Manage & Verify Running Clubs (6 Total)'),
+      h('button', {
+        class: 'btn primary small',
+        style: 'background: #E5A93C; color: #000; font-weight: bold;',
+        onclick: async () => seedClubs()
+      }, '🌱 Seed / Reset 6 Official Clubs')
+    )
+  );
+
+  const clubsListEl = h('div', { style: 'margin-top:12px;' });
+  view.append(clubsListEl);
+
+  onSnapshot(query(collection(db, 'clubs'), orderBy('createdAt', 'desc')), (snap) => {
+    clubsListEl.innerHTML = '';
+    if (snap.empty) {
+      clubsListEl.append(h('div', { class: 'card', style: 'text-align:center; padding:20px;' },
+        h('p', { class: 'muted' }, 'No clubs created yet. Click "Seed 6 Official Clubs" above to generate your initial 6 Tanzanian running clubs!'),
+        h('button', { class: 'btn primary small', style: 'background:#E5A93C; color:#000; margin-top:10px;', onclick: seedClubs }, '🌱 Seed 6 Clubs Now')
+      ));
+      return;
+    }
+
+    snap.forEach((docSnap) => {
+      const c = docSnap.data();
+      const isVerified = c.verified === true;
+      const isPro = c.tier === 'pro';
+
+      clubsListEl.append(h('div', { class: 'tile', style: 'align-items: center;' },
+        h('div', { class: 'av' }, isVerified ? '✅' : '🏢'),
+        h('div', { class: 'grow' },
+          h('b', {}, `${c.name || 'Unnamed Club'} ${isVerified ? '✅ Verified' : ''} ${isPro ? '⭐ Pro' : ''}`),
+          h('small', { class: 'muted' }, `${c.city || 'Tanzania'} · ${c.memberCount ?? 0} members · HQ: ${c.meetingInfo?.hq || 'TBA'}`)
+        ),
+        h('div', { class: 'row', style: 'gap: 6px;' },
+          h('button', {
+            class: `btn small ${isVerified ? 'secondary' : 'primary'}`,
+            style: isVerified ? '' : 'background: #10B981; color: #fff;',
+            onclick: async () => {
+              await updateDoc(docSnap.ref, { verified: !isVerified });
+              toast(isVerified ? `Unverified ${c.name}` : `Verified ${c.name} ✅!`);
+            }
+          }, isVerified ? 'Revoke' : '✅ Verify'),
+          h('button', {
+            class: `btn small ${isPro ? 'secondary' : 'primary'}`,
+            style: isPro ? '' : 'background: #E5A93C; color: #000;',
+            onclick: async () => {
+              await updateDoc(docSnap.ref, { tier: isPro ? 'free' : 'pro' });
+              toast(isPro ? `Set to Free` : `${c.name} is now Pro ⭐`);
+            }
+          }, isPro ? 'Free' : '⭐ Pro')
+        )
+      ));
+    });
+  });
+
+  // ─── 2. Pending Pro Subscriptions ───
+  view.append(h('h2', { style: 'margin-top:28px;' }, 'Pro Payment Requests'));
   const subs = h('div');
   view.append(subs);
   onSnapshot(query(collection(db, 'subrequests'), where('status', '==', 'pending')),
     (snap) => {
       subs.innerHTML = '';
-      if (snap.empty) subs.append(h('p', { class: 'muted' }, 'No pending requests.'));
+      if (snap.empty) subs.append(h('p', { class: 'muted' }, 'No pending payment requests.'));
       snap.forEach((d) => {
         const r = d.data();
         subs.append(h('div', { class: 'tile' },
@@ -58,20 +119,20 @@ export async function renderPlatform(view) {
             h('button', { class: 'btn small', onclick: async () => {
               const until = new Date(); until.setFullYear(until.getFullYear() + 1);
               const b = writeBatch(db);
-              b.update(doc(db, 'clubs', r.clubId), { tier: 'pro', paidUntil: until });
+              b.update(doc(db, 'clubs', r.clubId), { tier: 'pro', verified: true, paidUntil: until });
               b.update(d.ref, { status: 'paid', decidedAt: serverTimestamp(),
                 decidedBy: auth.currentUser.uid });
-              await b.commit(); toast(`${r.clubName} is now Pro ⭐`);
+              await b.commit(); toast(`${r.clubName} is now Pro ⭐ & Verified ✅`);
             } }, '✅ Confirm'),
             h('button', { class: 'btn danger small', onclick: () =>
               updateDoc(d.ref, { status: 'rejected', decidedAt: serverTimestamp() }) }, '✕'))));
       });
     });
 
-  // Tools
-  view.append(h('h2', {}, 'Tools'));
-  const cfgSnap = await getDoc(doc(db, 'config', 'payment'));
-  const cfg = cfgSnap.data() || {};
+  // ─── 3. Tools & Config ───
+  view.append(h('h2', { style: 'margin-top:28px;' }, 'Tools & Configuration'));
+  const cfgSnap = await getDoc(doc(db, 'config', 'payment')).catch(() => null);
+  const cfg = cfgSnap && cfgSnap.exists() ? cfgSnap.data() : {};
   const payNum = h('input', { value: cfg.payToNumber || '', placeholder: '0712 345 678' });
   const payName = h('input', { value: cfg.payToName || 'Kimbia TZ' });
   view.append(h('div', { class: 'card' },
@@ -79,13 +140,12 @@ export async function renderPlatform(view) {
     h('label', { class: 'field', style: 'margin-top:10px' }, h('span', {}, 'Number'), payNum),
     h('label', { class: 'field' }, h('span', {}, 'Account name'), payName),
     h('button', { class: 'btn small', onclick: async () => {
-      await setDoc(doc(db, 'config', 'payment'),
+      await setDoc(doc(doc(db, 'config', 'payment')),
         { payToNumber: payNum.value.trim(), payToName: payName.value.trim() }, { merge: true });
       toast('Saved 💳');
     } }, 'Save')));
 
-  // No-Blaze mode: league rollup + weekly-active refresh run client-side
-  // as platform admin (Cloud Functions were Blaze-only).
+  // Standings Publishing
   const rollupBtn = h('button', { class: 'btn secondary', style: 'margin-bottom:10px' }, '⚡ Publish league standings (last month)');
   rollupBtn.onclick = async () => {
     rollupBtn.disabled = true;
@@ -94,9 +154,9 @@ export async function renderPlatform(view) {
       const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
       const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
       const key = `${start.getUTCFullYear()}-${String(start.getUTCMonth() + 1).padStart(2, '0')}`;
-      const cfg = (await getDoc(doc(db, 'config', 'scoring'))).data() || {};
+      const cfgScoring = (await getDoc(doc(db, 'config', 'scoring'))).data() || {};
       const w = { wAvgKm: 35, wAttendance: 30, wTotalKm: 20, wEngagement: 15,
-        avgKmCap: 60, attendanceTarget: 0.4, ...cfg };
+        avgKmCap: 60, attendanceTarget: 0.4, ...cfgScoring };
       const clubs = await getDocs(collection(db, 'clubs'));
       const results = [];
       for (const c of clubs.docs) {
@@ -141,19 +201,21 @@ export async function renderPlatform(view) {
     weeklyBtn.disabled = false;
   };
 
-  view.append(rollupBtn, weeklyBtn,
-    h('button', { class: 'btn secondary', onclick: async () => {
-      for (const s of SEED) {
-        await addDoc(collection(db, 'clubs'), { ...s,
-          meetingInfo: { hq: s.hq, schedule: s.schedule, payTo: null },
-          focusTags: s.tags, tier: 'free', verified: false, claimed: false,
-          ownerId: null, memberCount: 0,
-          stats: { totalKm: 0, runCount: 0, last7Active: 0 },
-          createdAt: serverTimestamp() });
-      }
-      await setDoc(doc(db, 'config', 'scoring'), {
-        wAvgKm: 35, wAttendance: 30, wTotalKm: 20, wEngagement: 15,
-        avgKmCap: 60, attendanceTarget: 0.4 }, { merge: true });
-      toast('Seeded 6 clubs ✅');
-    } }, '🌱 Seed demo clubs'));
+  view.append(rollupBtn, weeklyBtn);
+
+  async function seedClubs() {
+    toast('Seeding 6 official clubs...');
+    for (const s of SEED_6_CLUBS) {
+      await addDoc(collection(db, 'clubs'), { ...s,
+        meetingInfo: { hq: s.hq, schedule: s.schedule, payTo: null },
+        focusTags: s.tags, tier: 'free', verified: true, claimed: true,
+        ownerId: auth.currentUser?.uid || null, memberCount: 15,
+        stats: { totalKm: 180, runCount: 30, last7Active: 10 },
+        createdAt: serverTimestamp() });
+    }
+    await setDoc(doc(db, 'config', 'scoring'), {
+      wAvgKm: 35, wAttendance: 30, wTotalKm: 20, wEngagement: 15,
+      avgKmCap: 60, attendanceTarget: 0.4 }, { merge: true });
+    toast('Seeded & Verified all 6 clubs ✅');
+  }
 }

@@ -16,10 +16,12 @@ export function renderProfile(view) {
           (p.displayName || 'R')[0].toUpperCase()),
         h('div', {},
           h('b', { style: 'font-size:19px' }, p.displayName || 'Runner'),
-          h('div', { class: 'muted', style: 'font-size:13px' }, 
-            (auth.currentUser?.email || auth.currentUser?.phoneNumber)
-              ? `${p.homeCity || 'Dar es Salaam'} · ${auth.currentUser.email || auth.currentUser.phoneNumber}`
-              : (p.homeCity || 'Dar es Salaam')
+          h('div', { class: 'muted', style: 'font-size:13px' },
+            (() => {
+              const city = p.homeCity || 'Dar es Salaam';
+              const contact = auth.currentUser?.email || auth.currentUser?.phoneNumber || null;
+              return contact ? `${city} · ${contact}` : city;
+            })()
           ))),
       h('button', { class: 'btn secondary small', onclick: editProfile }, '✏️')),
 

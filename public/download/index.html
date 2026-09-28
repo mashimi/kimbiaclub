@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0A0E0C">
+<title>Download Kimbia TZ — Android App</title>
+<meta name="description" content="Download the Kimbia TZ Android app — The League of Tanzanian Running Clubs. Track GPS runs, join clubs, and compete in the monthly league.">
+<link rel="apple-touch-icon" href="/icon-512.png">
+<style>
+  :root {
+    --green: #00C853; --lime: #C6FF4F; --amber: #E5A93C;
+    --bg: #0A0E0C; --surface: #131A16; --surface-hi: #1C2620;
+    --outline: #2A362F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg); color: #fff;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+  }
+
+  /* Hero */
+  .hero-wrap {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px 20px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(0,200,83,0.12) 0%, transparent 65%);
+  }
+
+  .logo-ring {
+    width: 100px; height: 100px; border-radius: 28px;
+    background: linear-gradient(135deg, #0A2916, #173824);
+    border: 2px solid var(--green);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 52px; margin-bottom: 28px;
+    box-shadow: 0 0 40px rgba(0,200,83,0.25);
+    animation: pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 40px rgba(0,200,83,0.25); }
+    50% { box-shadow: 0 0 60px rgba(0,200,83,0.45); }
+  }
+
+  h1 {
+    font-size: clamp(28px, 7vw, 46px);
+    font-weight: 900; text-align: center; letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+  h1 span { color: var(--green); }
+
+  .tagline {
+    margin-top: 12px; font-size: 16px; color: rgba(255,255,255,0.6);
+    text-align: center; max-width: 380px; line-height: 1.5;
+  }
+
+  /* Feature pills */
+  .features {
+    display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0;
+    justify-content: center; max-width: 480px;
+  }
+  .feat {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--outline);
+    border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600;
+  }
+
+  /* Download card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: 24px; padding: 28px 24px;
+    width: 100%; max-width: 400px;
+    margin-bottom: 20px;
+  }
+  .card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .card-icon { font-size: 38px; }
+  .card-title { font-size: 18px; font-weight: 800; }
+  .card-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+  .info-row {
+    display: flex; justify-content: space-between;
+    font-size: 13px; padding: 8px 0;
+    border-bottom: 1px solid var(--outline);
+  }
+  .info-row:last-of-type { border-bottom: none; }
+  .info-row span:first-child { color: rgba(255,255,255,0.5); }
+  .info-row span:last-child { font-weight: 700; }
+
+  .download-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 16px 20px; margin-top: 20px;
+    background: var(--green); color: #000;
+    border: 0; border-radius: 16px; font-size: 16px; font-weight: 800;
+    cursor: pointer; text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 8px 24px rgba(0,200,83,0.35);
+  }
+  .download-btn:hover {
+    background: #00e060;
+    box-shadow: 0 12px 32px rgba(0,200,83,0.5);
+    transform: translateY(-1px);
+  }
+  .download-btn .dl-icon { font-size: 22px; }
+
+  .note {
+    font-size: 12px; color: rgba(255,255,255,0.42);
+    text-align: center; margin-top: 10px; line-height: 1.5;
+  }
+
+  .back-link {
+    margin-top: 32px; font-size: 14px; color: var(--green);
+    text-decoration: none; font-weight: 600;
+  }
+  .back-link:hover { text-decoration: underline; }
+
+  /* How to install */
+  .steps { width: 100%; max-width: 400px; margin-top: 8px; }
+  .steps h3 { font-size: 15px; font-weight: 800; margin-bottom: 12px; color: rgba(255,255,255,0.7); }
+  .step {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--outline);
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(0,200,83,0.15); border: 1px solid var(--green);
+    color: var(--green); font-size: 12px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-text { font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.7); }
+  .step-text b { color: #fff; }
+</style>
+</head>
+<body>
+<div class="hero-wrap">
+
+  <div class="logo-ring">🏃</div>
+
+  <h1>KIMBIA <span>TZ</span></h1>
+  <p class="tagline">Tanzania's Running League — Track GPS runs, compete in monthly standings, join local clubs.</p>
+
+  <div class="features">
+    <div class="feat">📍 GPS Run Tracking</div>
+    <div class="feat">🏆 Monthly League</div>
+    <div class="feat">👥 Join Running Clubs</div>
+    <div class="feat">📅 Events & Races</div>
+    <div class="feat">🇹🇿 Made for Tanzania</div>
+  </div>
+
+  <!-- Download Card -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">🤖</span>
+      <div>
+        <div class="card-title">Android APK</div>
+        <div class="card-sub">Direct install — no Google Play required</div>
+      </div>
+    </div>
+
+    <div class="info-row">
+      <span>App name</span><span>Kimbia TZ</span>
+    </div>
+    <div class="info-row">
+      <span>Package</span><span>tz.kimbia.kimbiaclub</span>
+    </div>
+    <div class="info-row">
+      <span>Version</span><span>1.0.0 (build 1)</span>
+    </div>
+    <div class="info-row">
+      <span>Min Android</span><span>5.0 (API 21+)</span>
+    </div>
+    <div class="info-row">
+      <span>Size</span><span>7.95 MB (arm64)</span>
+    </div>
+    <div class="info-row">
+      <span>Type</span><span>Release APK</span>
+    </div>
+
+    <a class="download-btn" href="/download/kimbiaclub.apk" download="KimbiaTZ-1.0.0.apk">
+      <span class="dl-icon">⬇️</span>
+      Download APK (Free)
+    </a>
+    <p class="note">By downloading, you agree to allow installation from unknown sources in your Android settings.</p>
+  </div>
+
+  <!-- Installation Steps -->
+  <div class="steps">
+    <h3>📋 How to install</h3>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">Tap <b>Download APK</b> above to save the file to your phone.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">Open <b>Settings → Apps → Special app access → Install unknown apps</b> and allow your browser.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">Open your <b>Downloads folder</b>, tap the APK file, then tap <b>Install</b>.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-text">Open <b>Kimbia TZ</b>, sign in, and start tracking! 🏃</div>
+    </div>
+  </div>
+
+  <a class="back-link" href="/">← Back to Kimbia TZ Web App</a>
+</div>
+</body>
+</html>

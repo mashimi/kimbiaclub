@@ -1,12 +1,16 @@
 {
   "hosting": {
     "public": "public",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [{ "source": "**", "destination": "/index.html" }],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "**/download/*.apk"],
     "headers": [
       { "source": "**/*.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
       { "source": "**/*.css", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
       { "source": "**/*.html", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+    ],
+    "rewrites": [
+      { "source": "/download", "destination": "/download/index.html" },
+      { "source": "/download/", "destination": "/download/index.html" },
+      { "source": "**", "destination": "/index.html" }
     ]
   },
   "firestore": { "rules": "firestore.rules", "indexes": "firestore.indexes.json" },

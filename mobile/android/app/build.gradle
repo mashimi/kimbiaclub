@@ -71,8 +71,8 @@ dependencies {
 }
 
 project.afterEvaluate {
-    tasks.matching { it.name.contains("compress") && it.name.contains("Assets") }.configureEach { compressTask ->
-        tasks.matching { it.name.contains("copyFlutterAssets") }.configureEach { copyTask ->
+    tasks.matching { it.name.contains("compress") && it.name.contains("Assets") }.all { compressTask ->
+        tasks.matching { it.name.contains("copyFlutterAssets") }.all { copyTask ->
             compressTask.mustRunAfter(copyTask)
         }
     }

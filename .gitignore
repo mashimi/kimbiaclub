@@ -16,3 +16,7 @@ ui-debug.log
 *.log
 mobile/build/
 mobile/.dart_tool/
+
+# APK binaries
+public/download/*.apk
+upload-apk.js
