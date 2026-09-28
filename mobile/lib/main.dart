@@ -139,7 +139,17 @@ class _MainMobileShellState extends State<MainMobileShell> {
       if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location permission is required for GPS run tracking.')),
+          SnackBar(
+            content: const Text('Location permission is required for GPS run tracking.'),
+            duration: const Duration(seconds: 6),
+            action: SnackBarAction(
+              label: 'OPEN SETTINGS',
+              textColor: const Color(0xFFE5A93C),
+              onPressed: () {
+                Geolocator.openAppSettings();
+              },
+            ),
+          ),
         );
         return;
       }

@@ -14,7 +14,7 @@ const hav = (a, b) => {
 export function renderTrack(view) {
   view.innerHTML = '';
   if (!('geolocation' in navigator)) {
-    view.append(h('p', { class: 'error' }, 'This browser has no GPS support.'));
+    view.append(h('p', { class: 'error' }, 'This device/browser has no GPS support.'));
     return;
   }
 
@@ -23,6 +23,8 @@ export function renderTrack(view) {
 
   const dEl = h('b', {}, '0.00'), tEl = h('b', {}, '00:00:00'), pEl = h('b', {}, '--');
   const ctrlRow = h('div', { class: 'row', style: 'margin-top:18px' });
+  const statusBanner = h('div', { id: 'gps-status-banner' });
+
   const timer = setInterval(() => {
     if (!started) return;
     const elapsed = ((running ? Date.now() : pausedAt) - started - pausedTotal) / 1000;
@@ -43,7 +45,42 @@ export function renderTrack(view) {
     }
   };
 
+  function handleGpsError(err) {
+    statusBanner.innerHTML = '';
+    let msg = 'Location permission denied. Please allow location access in your phone/browser settings.';
+    let actionTip = 'Tap the lock/settings icon near your browser address bar → Location → Allow.';
+    
+    if (err.code === 1) { // PERMISSION_DENIED
+      msg = 'Location Permission Denied';
+      actionTip = 'Your phone or browser blocked location access for Kimbia TZ. Tap the lock icon in your address bar or open Phone Settings → Apps → Chrome/Browser → Permissions → Allow Location.';
+    } else if (err.code === 2) { // POSITION_UNAVAILABLE
+      msg = 'GPS Signal Searching...';
+      actionTip = 'Make sure your phone\'s Location/GPS is turned ON in system settings.';
+    } else if (err.code === 3) { // TIMEOUT
+      msg = 'GPS Timeout';
+      actionTip = 'Moving outdoors away from tall buildings helps acquire a faster GPS lock.';
+    }
+
+    statusBanner.append(h('div', { class: 'card', style: 'background: rgba(255,82,82,0.1); border: 1px solid var(--red); padding: 14px; margin-top: 14px; text-align: left;' },
+      h('div', { style: 'display: flex; gap: 10px; align-items: center;' },
+        h('span', { style: 'font-size: 24px;' }, '📍'),
+        h('div', { style: 'flex: 1;' },
+          h('b', { style: 'color: var(--red); font-size: 14px; display: block;' }, msg),
+          h('div', { style: 'font-size: 12px; color: var(--muted); margin-top: 2px;' }, actionTip)
+        )
+      ),
+      h('button', {
+        class: 'btn secondary small',
+        style: 'margin-top: 10px; width: 100%;',
+        onclick: () => { statusBanner.innerHTML = ''; start(); }
+      }, '🔄 Retry GPS Lock')
+    ));
+  }
+
   function start() {
+    statusBanner.innerHTML = '';
+    toast('Requesting GPS lock...');
+    
     navigator.geolocation.getCurrentPosition((p) => {
       watch = navigator.geolocation.watchPosition((pos) => {
         if (!running) return;
@@ -55,12 +92,16 @@ export function renderTrack(view) {
           dist += seg;
         }
         points.push(np);
-      }, (e) => toast('GPS: ' + e.message), { enableHighAccuracy: true, maximumAge: 2000 });
+      }, (e) => toast('GPS: ' + (e.message || 'Signal lost')), { enableHighAccuracy: true, maximumAge: 2000 });
+      
       started = Date.now(); running = true;
-      toast('Tracking… keep this tab open');
+      toast('GPS Active! Tracking run… 🏃');
       paint();
-    }, () => toast('Location permission denied'), { enableHighAccuracy: true });
+    }, (err) => {
+      handleGpsError(err);
+    }, { enableHighAccuracy: true, timeout: 10000 });
   }
+
   function pause() { running = false; pausedAt = Date.now(); paint(); }
   function resume() { pausedTotal += Date.now() - pausedAt; running = true; paint(); }
 
@@ -73,10 +114,10 @@ export function renderTrack(view) {
     const step = Math.max(1, Math.ceil(points.length / 300));
     const pts = points.filter((_, i) => i % step === 0 || i === points.length - 1);
     await addDoc(collection(db, 'activities'), {
-      userId: auth.currentUser.uid, clubId,
+      userId: auth.currentUser?.uid || 'guest', clubId,
       distanceM: Math.round(dist), durationS: Math.round(elapsed),
       startedAt: new Date(started),
-      points: pts, source: 'gps', verified: false,   // league reads source==='gps'
+      points: pts, source: 'gps', verified: false,
       createdAt: serverTimestamp(),
     });
     if (clubId) await bumpClubStats(clubId, Math.round(dist));
@@ -86,7 +127,7 @@ export function renderTrack(view) {
 
   // optional club tagging — state.roles is { clubId: clubName }
   const clubSel = h('select', {}, h('option', { value: '' }, 'Solo run'),
-    Object.entries(state.roles).map(([id]) => h('option', { value: id }, 'Tag club run')));
+    Object.entries(state.roles || {}).map(([id]) => h('option', { value: id }, 'Tag club run')));
   clubSel.onchange = () => { clubId = clubSel.value || null; };
 
   view.append(
@@ -100,6 +141,7 @@ export function renderTrack(view) {
       h('div', { class: 'row', style: 'justify-content:center;margin-top:14px' },
         h('div', { style: 'flex:1' }, tEl, h('small', { class: 'muted' }, ' TIME')),
         h('div', { style: 'flex:1' }, pEl, h('small', { class: 'muted' }, ' PACE /KM'))),
-      ctrlRow));
+      ctrlRow,
+      statusBanner));
   paint();
 }
