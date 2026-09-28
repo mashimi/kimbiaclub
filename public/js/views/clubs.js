@@ -53,9 +53,16 @@ export function renderClubDetail(view, clubId) {
     const isAdmin = ['owner', 'admin'].includes(myRole);
     const isMember = !!myRole && myRole !== 'none';
 
+    // Verification badge
+    const verifiedBadge = club.verified
+      ? h('span', { style: 'display:inline-flex;align-items:center;gap:4px;background:rgba(0,200,83,0.15);border:1px solid rgba(0,200,83,0.5);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;color:#00C853;margin-left:8px;' }, '✓ Verified')
+      : h('span', { style: 'display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.45);margin-left:8px;' }, '⏳ Pending verification');
+
     view.append(
       h('div', { class: 'spread' },
-        h('h1', {}, `${club.name || ''} ${club.tier === 'pro' ? '⭐' : ''}`),
+        h('div', {},
+          h('h1', { style: 'display:inline' }, `${club.name || ''} ${club.tier === 'pro' ? '⭐' : ''}`),
+          verifiedBadge),
         isAdmin ? h('a', { href: `#/admin/${clubId}` },
           h('button', { class: 'btn small' }, '⚙️ Admin')) : null),
       h('p', { class: 'muted' }, `${club.city || ''} · 📍 ${club.meetingInfo?.hq || 'TBA'}`),
@@ -70,14 +77,14 @@ export function renderClubDetail(view, clubId) {
         h('b', {}, [Array.isArray(s.days) ? s.days.join(', ') : s.days, s.time].filter(Boolean).join(' — ')),
         h('div', { class: 'muted', style: 'font-size:14px' }, s.type || ''))),
 
-      payTo ? h('div', { class: 'paybox' },
+      ...(payTo ? [h('div', { class: 'paybox' },
         h('small', { class: 'muted' }, 'Membership / event payments to:'),
         h('div', { class: 'num' }, `${payTo.number} (${payTo.network || ''})`),
-        payTo.name ? h('small', {}, `Name: ${payTo.name}`) : null) : null,
+        payTo.name ? h('small', {}, `Name: ${payTo.name}`) : null)] : []),
 
       h('div', { style: 'margin:18px 0' }, joinButton()),
 
-      Object.entries(club.links || {}).filter(([, u]) => u).map(([k, u]) =>
+      ...Object.entries(club.links || {}).filter(([, u]) => u).map(([k, u]) =>
         h('a', { href: u, target: '_blank', rel: 'noopener' },
           h('button', { class: 'btn secondary', style: 'margin-bottom:8px' }, `↗ ${k}`))),
 
