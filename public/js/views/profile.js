@@ -15,8 +15,12 @@ export function renderProfile(view) {
         h('div', { class: 'av', style: 'width:52px;height:52px;font-size:24px;font-weight:900;color:var(--lime);background:var(--surface-hi);border-radius:50%;display:flex;align-items:center;justify-content:center' },
           (p.displayName || 'R')[0].toUpperCase()),
         h('div', {},
-          h('b', { style: 'font-size:19px' }, p.displayName),
-          h('div', { class: 'muted', style: 'font-size:13px' }, `${p.homeCity} · ${auth.currentUser.phoneNumber}`))),
+          h('b', { style: 'font-size:19px' }, p.displayName || 'Runner'),
+          h('div', { class: 'muted', style: 'font-size:13px' }, 
+            (auth.currentUser?.email || auth.currentUser?.phoneNumber)
+              ? `${p.homeCity || 'Dar es Salaam'} · ${auth.currentUser.email || auth.currentUser.phoneNumber}`
+              : (p.homeCity || 'Dar es Salaam')
+          ))),
       h('button', { class: 'btn secondary small', onclick: editProfile }, '✏️')),
 
     h('div', { id: 'stats', style: 'margin-top:16px' }),
