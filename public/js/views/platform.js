@@ -73,29 +73,58 @@ export async function renderPlatform(view) {
       const isVerified = c.verified === true;
       const isPro = c.tier === 'pro';
 
-      clubsListEl.append(h('div', { class: 'tile', style: 'align-items: center;' },
-        h('div', { class: 'av' }, isVerified ? '✅' : '🏢'),
-        h('div', { class: 'grow' },
-          h('b', {}, `${c.name || 'Unnamed Club'} ${isVerified ? '✅ Verified' : ''} ${isPro ? '⭐ Pro' : ''}`),
-          h('small', { class: 'muted' }, `${c.city || 'Tanzania'} · ${c.memberCount ?? 0} members · HQ: ${c.meetingInfo?.hq || 'TBA'}`)
+      clubsListEl.append(h('div', {
+        class: 'card',
+        style: `border-left: 4px solid ${isVerified ? '#00C853' : '#555'}; margin-bottom: 12px; padding: 16px 18px;`
+      },
+        // Club header row
+        h('div', { class: 'row', style: 'align-items:center; gap:12px; margin-bottom:12px;' },
+          h('div', { style: `width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;background:${isVerified ? 'rgba(0,200,83,0.12)' : 'rgba(255,255,255,0.06)'};flex-shrink:0;` },
+            isVerified ? '✅' : '🏢'),
+          h('div', { class: 'grow' },
+            h('div', { style: 'font-size:16px;font-weight:800;' },
+              `${c.name || 'Unnamed Club'} ${isPro ? '⭐' : ''}`),
+            h('div', { class: 'muted', style: 'font-size:12px;margin-top:2px;' },
+              `${c.city || 'Tanzania'} · ${c.memberCount ?? 0} members · HQ: ${c.meetingInfo?.hq || 'TBA'}`)),
+          // Verification status badge
+          h('span', {
+            style: `padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800;flex-shrink:0;${isVerified
+              ? 'background:rgba(0,200,83,0.15);color:#00C853;border:1px solid rgba(0,200,83,0.4);'
+              : 'background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.45);border:1px solid rgba(255,255,255,0.15);'}`
+          }, isVerified ? '✓ VERIFIED' : '⏳ UNVERIFIED')
         ),
-        h('div', { class: 'row', style: 'gap: 6px;' },
+
+        // Action buttons
+        h('div', { class: 'row', style: 'gap:8px;' },
+          // Big verify/unverify button
           h('button', {
-            class: `btn small ${isVerified ? 'secondary' : 'primary'}`,
-            style: isVerified ? '' : 'background: #10B981; color: #fff;',
-            onclick: async () => {
+            style: `flex:2;padding:10px 0;border-radius:12px;font-size:14px;font-weight:800;border:none;cursor:pointer;transition:all 0.2s;${isVerified
+              ? 'background:rgba(255,80,80,0.12);color:#ff6b6b;border:1px solid rgba(255,80,80,0.3);'
+              : 'background:#00C853;color:#000;box-shadow:0 4px 14px rgba(0,200,83,0.35);'}`,
+            onclick: async (e) => {
+              e.target.disabled = true;
+              e.target.textContent = '...';
               await updateDoc(docSnap.ref, { verified: !isVerified });
-              toast(isVerified ? `Unverified ${c.name}` : `Verified ${c.name} ✅!`);
+              toast(isVerified ? `❌ Unverified ${c.name}` : `✅ ${c.name} is now Verified!`);
             }
-          }, isVerified ? 'Revoke' : '✅ Verify'),
+          }, isVerified ? '✕ Revoke Verification' : '✅ Verify Club'),
+
+          // Pro toggle button
           h('button', {
-            class: `btn small ${isPro ? 'secondary' : 'primary'}`,
-            style: isPro ? '' : 'background: #E5A93C; color: #000;',
+            style: `flex:1;padding:10px 0;border-radius:12px;font-size:13px;font-weight:700;border:none;cursor:pointer;${isPro
+              ? 'background:rgba(229,169,60,0.12);color:#E5A93C;border:1px solid rgba(229,169,60,0.3);'
+              : 'background:rgba(229,169,60,0.1);color:#E5A93C;border:1px solid rgba(229,169,60,0.25);'}`,
             onclick: async () => {
               await updateDoc(docSnap.ref, { tier: isPro ? 'free' : 'pro' });
               toast(isPro ? `Set to Free` : `${c.name} is now Pro ⭐`);
             }
-          }, isPro ? 'Free' : '⭐ Pro')
+          }, isPro ? '⭐ Pro (click to free)' : '⭐ Set Pro'),
+
+          // View club link
+          h('button', {
+            style: 'flex:0.6;padding:10px 0;border-radius:12px;font-size:13px;font-weight:700;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.6);cursor:pointer;',
+            onclick: () => { location.hash = `#/clubs/${docSnap.id}`; }
+          }, '👁 View')
         )
       ));
     });

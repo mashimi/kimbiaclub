@@ -39,7 +39,29 @@ export function renderProfile(view) {
       h('div', { class: 'grow' }, h('b', {}, 'Register a club'),
         h('small', {}, 'Start your own club on Kimbia')),
       h('span', { class: 'faint' }, '›')),
+  );
 
+  // Admin-only: Platform Console tile (check claim asynchronously)
+  const adminSection = h('div');
+  view.append(adminSection);
+  auth.currentUser.getIdTokenResult().then((token) => {
+    if (token.claims.admin) {
+      adminSection.append(
+        h('div', {
+          class: 'tile',
+          style: 'border:1px solid rgba(229,169,60,0.5);background:rgba(229,169,60,0.07);margin-bottom:4px;',
+          onclick: () => { location.hash = '#/platform'; }
+        },
+          h('div', { class: 'av', style: 'background:rgba(229,169,60,0.15);' }, '🛠'),
+          h('div', { class: 'grow' },
+            h('b', { style: 'color:#E5A93C' }, 'Platform Console'),
+            h('small', {}, 'Verify clubs, manage league, admin tools')),
+          h('span', { class: 'faint' }, '›'))
+      );
+    }
+  });
+
+  view.append(
     h('h2', {}, 'Clubs you own/admin'), h('div', { id: 'adminclubs' }),
     h('h2', {}, 'Clubs you joined'), h('div', { id: 'joinedclubs' }),
 
