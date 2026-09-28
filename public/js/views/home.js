@@ -27,7 +27,7 @@ export function renderHome(view) {
       h('div', { class: 'muted', style: 'font-size: 12px; margin-top: 4px;' }, 'Native GPS tracking, offline logging & Mobile Next SDK testing.'),
       h('div', { style: 'display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;' },
         h('a', {
-          href: 'https://github.com/mashimi/kimbiaclub/releases',
+          href: 'https://kimbia-tz.netlify.app/download',
           target: '_blank',
           class: 'btn primary small',
           style: 'background: #E5A93C; color: #000; text-decoration: none; font-weight: bold;'
