@@ -1,0 +1,70 @@
+name: Build Mobile App & Run Mobile Next E2E Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Java JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          architecture: x64
+
+      - name: Install Flutter Dependencies
+        run: |
+          cd mobile
+          flutter pub get
+
+      - name: Analyze Flutter Code
+        run: |
+          cd mobile
+          flutter analyze
+
+      - name: Build Android Release APK
+        run: |
+          cd mobile
+          flutter build apk --release
+
+      - name: Copy APK to Public Download Directory
+        run: |
+          mkdir -p public/download
+          cp mobile/build/app/outputs/flutter-apk/app-release.apk public/download/kimbiaclub.apk
+
+      - name: Upload APK Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: kimbiaclub-android-apk
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install Node Dependencies & Mobilewright
+        run: npm ci || npm install
+
+      - name: Run Mobilewright Tests on Mobile Next Cloud
+        if: env.MOBILENEXT_API_KEY != ''
+        env:
+          MOBILENEXT_API_KEY: ${{ secrets.MOBILENEXT_API_KEY }}
+          APK_PATH: ./mobile/build/app/outputs/flutter-apk/app-release.apk
+        run: npx mobilewright test

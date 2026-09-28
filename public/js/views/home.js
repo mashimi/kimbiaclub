@@ -18,6 +18,22 @@ export function renderHome(view) {
         h('div', { class: 'muted', style: 'font-size:13px' }, `${a.month} · ${a.score} pts`))));
   }).catch(() => {});
 
+  // Mobile App Download Banner
+  view.append(h('div', { class: 'hero mobile-app-banner', style: 'background: linear-gradient(135deg, #1E2922 0%, #121815 100%); border: 1px solid rgba(229, 169, 60, 0.4); margin-bottom: 20px;' },
+    h('div', { class: 'em' }, '📱'),
+    h('div', { style: 'flex: 1' },
+      h('div', { style: 'font-size: 10px; letter-spacing: 2px; color: var(--gold, #E5A93C); font-weight: 800; text-transform: uppercase;' }, 'FULL MOBILE APP & SDK'),
+      h('b', { style: 'font-size: 18px; color: #fff;' }, 'Get Kimbia TZ Android App'),
+      h('div', { class: 'muted', style: 'font-size: 12px; margin-top: 4px;' }, 'Native GPS tracking, offline support & Mobile Next SDK automation.'),
+      h('a', {
+        href: '/download/kimbiaclub.apk',
+        target: '_blank',
+        class: 'btn primary',
+        style: 'display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 8px 16px; font-size: 13px; font-weight: bold; background: #E5A93C; color: #000; text-decoration: none; border-radius: 8px;'
+      }, '📥 Download APK Direct Link')
+    )
+  ));
+
   view.append(h('h1', {}, 'League standings'),
     h('p', { class: 'muted', style: 'margin-bottom:16px' }, `Month: ${monthKey(-1)} — based on verified GPS runs only`));
 

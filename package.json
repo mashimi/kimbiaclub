@@ -1,0 +1,26 @@
+{
+  "name": "kimbiaclub",
+  "version": "1.0.0",
+  "description": "Kimbia TZ — League of Tanzanian Running Clubs Mobile App & Web Platform",
+  "scripts": {
+    "mobile:get": "cd mobile && flutter pub get",
+    "mobile:analyze": "cd mobile && flutter analyze",
+    "mobile:build-apk": "cd mobile && flutter build apk --release",
+    "test:mobile": "mobilewright test",
+    "test:mobilenext": "MOBILENEXT_API_KEY=$MOBILENEXT_API_KEY mobilewright test"
+  },
+  "devDependencies": {
+    "mobilewright": "^0.1.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "mobile",
+    "flutter",
+    "mobilenext",
+    "mobilewright",
+    "running-club",
+    "tanzania"
+  ],
+  "author": "Kimbia TZ Team",
+  "license": "MIT"
+}

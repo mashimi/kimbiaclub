@@ -1,0 +1,15 @@
+Analyzing mobile...                                             
+
+   info - The operand can't be null, so the condition is always false - lib\src\format.dart:8:9 - unnecessary_null_comparison
+warning - The left operand can't be null, so the right operand is never executed - lib\src\format.dart:8:45 - dead_null_aware_expression
+   info - The operand can't be null, so the condition is always false - lib\src\format.dart:15:16 - unnecessary_null_comparison
+warning - The left operand can't be null, so the right operand is never executed - lib\src\format.dart:22:13 - dead_null_aware_expression
+warning - The left operand can't be null, so the right operand is never executed - lib\src\format.dart:31:24 - dead_null_aware_expression
+   info - The operand can't be null, so the condition is always false - lib\src\format.dart:51:9 - unnecessary_null_comparison
+  error - 1 positional argument expected by 'add', but 0 found - lib\src\format.dart:62:56 - not_enough_positional_arguments
+  error - The named parameter 'months' isn't defined - lib\src\format.dart:62:56 - undefined_named_parameter
+warning - The left operand can't be null, so the right operand is never executed - lib\src\stats.dart:22:64 - dead_null_aware_expression
+warning - The left operand can't be null, so the right operand is never executed - lib\src\stats.dart:26:35 - dead_null_aware_expression
+   info - Unnecessary cast - lib\src\timeline.dart:30:37 - unnecessary_cast
+   info - Unnecessary cast - lib\src\timeline.dart:31:35 - unnecessary_cast
+

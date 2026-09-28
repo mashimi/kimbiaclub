@@ -6,8 +6,13 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 *.local
-.firebase/ 
+.firebase/
 
 # Local Netlify folder
 .netlify
-.netlify/ 
+.netlify/
+
+# Local logs & build temp files
+*.log
+mobile/build/
+mobile/.dart_tool/

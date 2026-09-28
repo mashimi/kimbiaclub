@@ -1,0 +1,43 @@
+name: kimbiaclub_mobile
+description: Kimbia TZ — League of Tanzanian Running Clubs (mobile app)
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.19.3 <3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase client SDK — no version bounds: the pub solver picks the newest
+  # versions compatible with this project's Dart 2.19 SDK constraint.
+  firebase_core: any
+  firebase_auth: any
+  cloud_firestore: any
+  firebase_storage: any
+
+  # GPS tracking (Android + iOS plugins resolved via federated plugins)
+  geolocator: any
+
+  # File picking for the Google Timeline import + logo upload
+  file_picker: any
+
+  # WebView engine for hybrid app container
+  webview_flutter: ^4.0.0
+
+  # Permission management for GPS, camera, storage
+  permission_handler: ^10.2.0
+
+  # External URL launcher
+  url_launcher: ^6.1.10
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
