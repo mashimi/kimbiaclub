@@ -29,7 +29,8 @@ export function renderTrack(view) {
     if (!started) return;
     const elapsed = ((running ? Date.now() : pausedAt) - started - pausedTotal) / 1000;
     tEl.textContent = Fmt.dur(elapsed);
-    pEl.textContent = dist > 30 && elapsed > 0 ? Fmt.pace(elapsed / (dist / 1000)) : '--';
+    dEl.textContent = (dist / 1000).toFixed(2);
+    pEl.textContent = dist > 5 && elapsed > 0 ? Fmt.pace(elapsed / (dist / 1000)) : '--';
   }, 1000);
 
   const paint = () => {
@@ -82,14 +83,19 @@ export function renderTrack(view) {
     toast('Requesting GPS lock...');
     
     navigator.geolocation.getCurrentPosition((p) => {
+      // Record initial position
+      const initP = { lat: p.coords.latitude, lng: p.coords.longitude, t: Date.now() };
+      points.push(initP);
+
       watch = navigator.geolocation.watchPosition((pos) => {
         if (!running) return;
         const np = { lat: pos.coords.latitude, lng: pos.coords.longitude, t: Date.now() };
         const last = points[points.length - 1];
         if (last) {
           const seg = hav(last, np);
-          if (seg > 90) return;           // impossible jump — ignore
+          if (seg > 90) return; // impossible jump — ignore
           dist += seg;
+          dEl.textContent = (dist / 1000).toFixed(2);
         }
         points.push(np);
       }, (e) => toast('GPS: ' + (e.message || 'Signal lost')), { enableHighAccuracy: true, maximumAge: 2000 });
@@ -109,24 +115,42 @@ export function renderTrack(view) {
     if (watch) navigator.geolocation.clearWatch(watch);
     clearInterval(timer);
     const elapsed = ((running ? Date.now() : pausedAt) - started - pausedTotal) / 1000;
-    if (dist < 50) { toast('Run too short to save'); location.hash = '#/home'; return; }
+    
+    if (dist < 5 && elapsed < 5) {
+      toast('Run too short to save');
+      location.hash = '#/profile';
+      return;
+    }
+    
+    toast('Saving run activity...');
+    
     // decimate to ~300 points
     const step = Math.max(1, Math.ceil(points.length / 300));
     const pts = points.filter((_, i) => i % step === 0 || i === points.length - 1);
-    await addDoc(collection(db, 'activities'), {
-      userId: auth.currentUser?.uid || 'guest',
-      clubId: clubId || null,
-      distanceM: Math.round(dist),
-      durationS: Math.round(elapsed),
-      startedAt: new Date(started),
-      points: pts,
-      source: 'gps',
-      verified: true, // GPS runs are verified live
-      createdAt: serverTimestamp(),
-    });
-    if (clubId) await bumpClubStats(clubId, Math.round(dist));
-    toast(`Saved ${(dist / 1000).toFixed(2)} km ✅ (counts for the league!)`);
-    location.hash = '#/profile';
+    
+    try {
+      await addDoc(collection(db, 'activities'), {
+        userId: auth.currentUser?.uid || 'guest',
+        clubId: clubId || null,
+        distanceM: Math.round(dist),
+        durationS: Math.round(elapsed),
+        startedAt: new Date(started),
+        points: pts,
+        source: 'gps',
+        verified: true, // GPS runs are verified live
+        createdAt: serverTimestamp(),
+      });
+      
+      if (clubId) {
+        await bumpClubStats(clubId, Math.round(dist));
+      }
+      
+      toast(`Saved ${(dist / 1000).toFixed(2)} km ✅`);
+      location.hash = '#/profile';
+    } catch (err) {
+      console.error('Error saving activity:', err);
+      toast('Error saving run: ' + (err.message || 'Please check connection'));
+    }
   }
 
   // Club Selector (load user's clubs & all active clubs)

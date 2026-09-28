@@ -74,35 +74,61 @@ export function renderProfile(view) {
     h('p', { class: 'faint', style: 'text-align:center;font-size:11px;margin-top:24px' },
       'Kimbia TZ v1.0 · Made for Tanzanian runners 🇹🇿'));
 
-  // stats + runs
-  onSnapshot(query(collection(db, 'activities'), where('userId', '==', uid),
-    orderBy('startedAt', 'desc'), limit(300)), (snap) => {
-    const docs = snap.docs.map((d) => d.data());
+  // stats + runs query with error fallback for missing index
+  function renderActivities(docs) {
     let totalM = 0, weekM = 0, weekN = 0;
     const weekAgo = Date.now() - 7 * 864e5;
     for (const a of docs) {
       totalM += a.distanceM || 0;
-      const at = a.startedAt?.toMillis?.() ?? 0;
+      const at = a.startedAt?.toMillis?.() ?? (a.startedAt ? new Date(a.startedAt).getTime() : 0);
       if (at > weekAgo) { weekM += a.distanceM || 0; weekN++; }
     }
     const el = view.querySelector('#stats');
-    el.innerHTML = '';
-    el.className = 'row';
-    [[String(docs.length), 'RUNS'], [Fmt.km(totalM), 'TOTAL'],
-     [`${weekN} · ${Fmt.km(weekM)}`, 'THIS WEEK']].forEach(([v, l]) => {
-      el.append(h('div', { class: 'bigstat', style: 'flex:1;background:var(--surface);border:1px solid var(--outline);border-radius:16px' },
-        h('b', { class: 'stat-num', style: 'font-size:16px' }, v),
-        h('small', { class: 'muted' }, l)));
-    });
-    const rl = view.querySelector('#runs'); rl.innerHTML = '';
-    if (!docs.length) rl.append(h('p', { class: 'muted' }, 'No runs yet — hit 🏃 Track!'));
-    docs.slice(0, 20).forEach((a) => {
-      const secs = a.durationS && a.distanceM ? a.durationS / (a.distanceM / 1000) : 0;
-      rl.append(h('div', { class: 'tile' },
-        h('div', { class: 'av' }, (a.verified || a.source === 'gps') ? '✅' : '🏃'),
-        h('div', { class: 'grow' },
-          h('b', {}, `${Fmt.km(a.distanceM)} · ${Fmt.dur(a.durationS)} · ${Fmt.pace(secs)} /km`),
-          h('small', {}, `${Fmt.dt(a.startedAt?.toDate?.())} · ${a.source}`))));
+    if (el) {
+      el.innerHTML = '';
+      el.className = 'row';
+      [[String(docs.length), 'RUNS'], [Fmt.km(totalM), 'TOTAL'],
+       [`${weekN} · ${Fmt.km(weekM)}`, 'THIS WEEK']].forEach(([v, l]) => {
+        el.append(h('div', { class: 'bigstat', style: 'flex:1;background:var(--surface);border:1px solid var(--outline);border-radius:16px' },
+          h('b', { class: 'stat-num', style: 'font-size:16px' }, v),
+          h('small', { class: 'muted' }, l)));
+      });
+    }
+    const rl = view.querySelector('#runs');
+    if (rl) {
+      rl.innerHTML = '';
+      if (!docs.length) {
+        rl.append(h('p', { class: 'muted' }, 'No runs yet — hit 🏃 Track!'));
+      } else {
+        docs.slice(0, 20).forEach((a) => {
+          const secs = a.durationS && a.distanceM ? a.durationS / (a.distanceM / 1000) : 0;
+          const dateVal = a.startedAt?.toDate?.() || (a.startedAt ? new Date(a.startedAt) : new Date());
+          rl.append(h('div', { class: 'tile' },
+            h('div', { class: 'av' }, (a.verified || a.source === 'gps') ? '✅' : '🏃'),
+            h('div', { class: 'grow' },
+              h('b', {}, `${Fmt.km(a.distanceM)} · ${Fmt.dur(a.durationS)} · ${Fmt.pace(secs)} /km`),
+              h('small', {}, `${Fmt.dt(dateVal)} · ${a.source || 'gps'}`))));
+        });
+      }
+    }
+  }
+
+  const qOrdered = query(collection(db, 'activities'), where('userId', '==', uid), orderBy('startedAt', 'desc'), limit(300));
+  const qSimple = query(collection(db, 'activities'), where('userId', '==', uid), limit(300));
+
+  onSnapshot(qOrdered, (snap) => {
+    const docs = snap.docs.map((d) => d.data());
+    renderActivities(docs);
+  }, (err) => {
+    console.warn('Ordered activities query failed, using fallback query:', err);
+    onSnapshot(qSimple, (snap) => {
+      const docs = snap.docs.map((d) => d.data());
+      docs.sort((a, b) => {
+        const tA = a.startedAt?.toMillis?.() || (a.startedAt ? new Date(a.startedAt).getTime() : 0);
+        const tB = b.startedAt?.toMillis?.() || (b.startedAt ? new Date(b.startedAt).getTime() : 0);
+        return tB - tA;
+      });
+      renderActivities(docs);
     });
   });
 
