@@ -18,24 +18,34 @@ export function renderHome(view) {
         h('div', { class: 'muted', style: 'font-size:13px' }, `${a.month} · ${a.score} pts`))));
   }).catch(() => {});
 
-  // Mobile App Download & Quick Action Banner
-  view.append(h('div', { class: 'hero mobile-app-banner', style: 'background: linear-gradient(135deg, #1E2922 0%, #121815 100%); border: 1px solid rgba(229, 169, 60, 0.4); margin-bottom: 20px;' },
-    h('div', { class: 'em' }, '📱'),
-    h('div', { style: 'flex: 1' },
-      h('div', { style: 'font-size: 10px; letter-spacing: 2px; color: var(--gold, #E5A93C); font-weight: 800; text-transform: uppercase;' }, 'FULL MOBILE APP & SDK'),
-      h('b', { style: 'font-size: 18px; color: #fff;' }, 'Kimbia TZ Mobile App'),
-      h('div', { class: 'muted', style: 'font-size: 12px; margin-top: 4px;' }, 'Native GPS tracking, offline logging & Mobile Next SDK testing.'),
-      h('div', { style: 'display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;' },
+  // African Runners League Banner
+  view.append(h('div', {
+    class: 'hero mobile-app-banner',
+    style: `position: relative; overflow: hidden; border-radius: 22px; padding: 24px 20px;
+            background: linear-gradient(180deg, rgba(10,14,12,0.4) 0%, rgba(10,14,12,0.92) 100%), url('/assets/hero.png') center/cover no-repeat;
+            border: 1px solid rgba(0, 200, 83, 0.4); margin-bottom: 24px; min-height: 180px; display: flex; flex-direction: column; justify-content: flex-end;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.5);`
+  },
+    h('div', { style: 'position: relative; z-index: 2;' },
+      h('div', { style: 'display: inline-flex; align-items: center; gap: 6px; background: rgba(0, 200, 83, 0.2); border: 1px solid var(--green); padding: 4px 10px; border-radius: 999px; font-size: 11px; color: var(--lime); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;' },
+        h('img', { src: '/assets/logo.png', style: 'width: 16px; height: 16px; border-radius: 4px;' }),
+        'TANZANIAN RUNNING LEAGUE'
+      ),
+      h('b', { style: 'font-size: 24px; color: #fff; display: block; line-height: 1.2; font-weight: 900;' }, 'Unite. Run. Conquer.'),
+      h('div', { style: 'color: rgba(255,255,255,0.8); font-size: 13px; margin-top: 6px; max-width: 480px; line-height: 1.4;' },
+        'The official digital hub for Tanzanian running clubs. Track GPS runs, compete in monthly club rankings, and conquer local races.'
+      ),
+      h('div', { style: 'display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px;' },
         h('a', {
           href: 'https://kimbia-tz.netlify.app/download',
           target: '_blank',
           class: 'btn primary small',
-          style: 'background: #E5A93C; color: #000; text-decoration: none; font-weight: bold;'
-        }, '📲 Get App (Android & iOS)'),
+          style: 'background: var(--green); color: #000; text-decoration: none; font-weight: 800; border-radius: 12px; padding: 10px 16px;'
+        }, '📲 Get Mobile App (Android & iOS)'),
         h('a', {
           href: '#/clubs',
           class: 'btn secondary small',
-          style: 'text-decoration: none;'
+          style: 'text-decoration: none; border-radius: 12px; padding: 10px 16px; background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); color: #fff; border: 1px solid rgba(255,255,255,0.3);'
         }, '👥 Browse Clubs')
       )
     )

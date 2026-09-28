@@ -12,8 +12,11 @@ export function renderProfile(view) {
   view.append(
     h('div', { class: 'spread' },
       h('div', { class: 'row' },
-        h('div', { class: 'av', style: 'width:52px;height:52px;font-size:24px;font-weight:900;color:var(--lime);background:var(--surface-hi);border-radius:50%;display:flex;align-items:center;justify-content:center' },
-          (p.displayName || 'R')[0].toUpperCase()),
+        h('img', {
+          src: p.photoURL || '/assets/avatar.png',
+          alt: 'Athlete Profile',
+          style: 'width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--green);box-shadow:0 0 14px rgba(0,200,83,0.35);'
+        }),
         h('div', {},
           h('b', { style: 'font-size:19px' }, p.displayName || 'Runner'),
           h('div', { class: 'muted', style: 'font-size:13px' },
