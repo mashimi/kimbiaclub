@@ -1,14 +1,50 @@
 import { db, auth } from '../firebase-init.js';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, serverTimestamp } from 'firebase/firestore';
 import { h, toast } from '../ui.js';
 import { bumpClubStats } from '../stats.js';
 import { state } from '../app.js';
 
 export async function renderLogRun(view) {
   view.innerHTML = '';
-  // clubs I'm an active member of — state.roles is { clubId: clubName }
-  const clubSel = h('select', {}, h('option', { value: '' }, 'Solo run (no club)'),
-    Object.entries(state.roles).map(([id, name]) => h('option', { value: id }, name)));
+  
+  const clubSel = h('select', {}, h('option', { value: '' }, '👤 Solo run (no club)'));
+
+  async function loadClubOptions() {
+    clubSel.innerHTML = '';
+    clubSel.append(h('option', { value: '' }, '👤 Solo run (no club)'));
+
+    const userRoles = state.roles || {};
+    const userClubIds = Object.keys(userRoles);
+
+    if (userClubIds.length > 0) {
+      const myGroup = h('optgroup', { label: '⭐ My Joined Clubs' });
+      for (const [id, name] of Object.entries(userRoles)) {
+        myGroup.append(h('option', { value: id }, `🏃 ${name}`));
+      }
+      clubSel.append(myGroup);
+      clubSel.value = userClubIds[0];
+    }
+
+    try {
+      const snap = await getDocs(collection(db, 'clubs'));
+      if (!snap.empty) {
+        const otherGroup = h('optgroup', { label: userClubIds.length > 0 ? 'Other Clubs' : 'All Running Clubs' });
+        snap.forEach((d) => {
+          if (!userRoles[d.id]) {
+            const data = d.data();
+            otherGroup.append(h('option', { value: d.id }, `🏃 ${data.name || 'Club'} (${data.city || 'Tanzania'})`));
+          }
+        });
+        if (otherGroup.children.length > 0) {
+          clubSel.append(otherGroup);
+        }
+      }
+    } catch (e) {
+      console.warn('Error loading clubs for logrun:', e);
+    }
+  }
+
+  loadClubOptions();
 
   const km = h('input', { type: 'number', step: '0.01', min: '0.1', placeholder: 'e.g. 8.5' });
   const mins = h('input', { type: 'number', min: '1', placeholder: 'e.g. 45' });

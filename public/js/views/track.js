@@ -1,5 +1,5 @@
 import { db, auth } from '../firebase-init.js';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, serverTimestamp } from 'firebase/firestore';
 import { h, toast, Fmt } from '../ui.js';
 import { bumpClubStats } from '../stats.js';
 import { state } from '../app.js';
@@ -114,10 +114,14 @@ export function renderTrack(view) {
     const step = Math.max(1, Math.ceil(points.length / 300));
     const pts = points.filter((_, i) => i % step === 0 || i === points.length - 1);
     await addDoc(collection(db, 'activities'), {
-      userId: auth.currentUser?.uid || 'guest', clubId,
-      distanceM: Math.round(dist), durationS: Math.round(elapsed),
+      userId: auth.currentUser?.uid || 'guest',
+      clubId: clubId || null,
+      distanceM: Math.round(dist),
+      durationS: Math.round(elapsed),
       startedAt: new Date(started),
-      points: pts, source: 'gps', verified: false,
+      points: pts,
+      source: 'gps',
+      verified: true, // GPS runs are verified live
       createdAt: serverTimestamp(),
     });
     if (clubId) await bumpClubStats(clubId, Math.round(dist));
@@ -125,10 +129,48 @@ export function renderTrack(view) {
     location.hash = '#/profile';
   }
 
-  // optional club tagging — state.roles is { clubId: clubName }
-  const clubSel = h('select', {}, h('option', { value: '' }, 'Solo run'),
-    Object.entries(state.roles || {}).map(([id]) => h('option', { value: id }, 'Tag club run')));
+  // Club Selector (load user's clubs & all active clubs)
+  const clubSel = h('select', {}, h('option', { value: '' }, '👤 Solo run (no club)'));
   clubSel.onchange = () => { clubId = clubSel.value || null; };
+
+  async function loadClubOptions() {
+    clubSel.innerHTML = '';
+    clubSel.append(h('option', { value: '' }, '👤 Solo run (no club)'));
+
+    const userRoles = state.roles || {};
+    const userClubIds = Object.keys(userRoles);
+
+    if (userClubIds.length > 0) {
+      const myGroup = h('optgroup', { label: '⭐ My Joined Clubs' });
+      for (const [id, name] of Object.entries(userRoles)) {
+        myGroup.append(h('option', { value: id }, `🏃 ${name}`));
+      }
+      clubSel.append(myGroup);
+      // Auto-select runner's first club
+      clubSel.value = userClubIds[0];
+      clubId = userClubIds[0];
+    }
+
+    try {
+      const snap = await getDocs(collection(db, 'clubs'));
+      if (!snap.empty) {
+        const otherGroup = h('optgroup', { label: userClubIds.length > 0 ? 'Other Clubs' : 'All Running Clubs' });
+        snap.forEach((d) => {
+          if (!userRoles[d.id]) {
+            const data = d.data();
+            otherGroup.append(h('option', { value: d.id }, `🏃 ${data.name || 'Club'} (${data.city || 'Tanzania'})`));
+          }
+        });
+        if (otherGroup.children.length > 0) {
+          clubSel.append(otherGroup);
+        }
+      }
+    } catch (e) {
+      console.warn('Error loading clubs for tagging:', e);
+    }
+  }
+
+  loadClubOptions();
 
   view.append(
     h('h1', {}, 'Track run'),
