@@ -3,6 +3,7 @@ import { collection, addDoc, getDocs, serverTimestamp } from 'firebase/firestore
 import { h, toast, Fmt } from '../ui.js';
 import { bumpClubStats } from '../stats.js';
 import { state } from '../app.js';
+import { fetchWeather } from '../weather.js';
 
 const hav = (a, b) => {
   const R = 6371000, rad = (x) => x * Math.PI / 180;
@@ -19,11 +20,12 @@ export function renderTrack(view) {
   }
 
   let watch = null, started = null, pausedAt = null, pausedTotal = 0;
-  let points = [], dist = 0, running = false, clubId = null;
+  let points = [], dist = 0, running = false, clubId = null, weatherData = null;
 
   const dEl = h('b', {}, '0.00'), tEl = h('b', {}, '00:00:00'), pEl = h('b', {}, '--');
   const ctrlRow = h('div', { class: 'row', style: 'margin-top:18px' });
   const statusBanner = h('div', { id: 'gps-status-banner' });
+  const weatherBanner = h('div', { id: 'track-weather-banner', style: 'margin-top:14px' });
 
   const timer = setInterval(() => {
     if (!started) return;
@@ -80,12 +82,31 @@ export function renderTrack(view) {
 
   function start() {
     statusBanner.innerHTML = '';
-    toast('Requesting GPS lock...');
+    toast('Requesting GPS lock & live weather...');
     
     navigator.geolocation.getCurrentPosition((p) => {
-      // Record initial position
-      const initP = { lat: p.coords.latitude, lng: p.coords.longitude, t: Date.now() };
+      const lat = p.coords.latitude, lng = p.coords.longitude;
+      const initP = { lat, lng, t: Date.now() };
       points.push(initP);
+
+      // Fetch Live Weather for runner's location
+      fetchWeather(lat, lng, 'Current Location').then((w) => {
+        weatherData = w;
+        weatherBanner.innerHTML = '';
+        weatherBanner.append(h('div', {
+          class: 'card',
+          style: 'background: rgba(0,200,83,0.08); border: 1px solid rgba(0,200,83,0.3); padding: 10px 14px; font-size: 13px; text-align: left; display: flex; align-items: center; justify-content: space-between;'
+        },
+          h('div', { class: 'row', style: 'gap: 8px;' },
+            h('span', { style: 'font-size: 20px;' }, w.icon),
+            h('div', {},
+              h('b', { style: 'color: #fff;' }, `${w.temp}°C · ${w.condition}`),
+              h('div', { class: 'muted', style: 'font-size: 11px;' }, `💨 Wind: ${w.windSpeed} km/h · 💧 Humidity: ${w.humidity}%`)
+            )
+          ),
+          h('span', { style: 'font-size: 11px; font-weight: 700; color: var(--lime);' }, '🌤️ Live Weather')
+        ));
+      });
 
       watch = navigator.geolocation.watchPosition((pos) => {
         if (!running) return;
@@ -138,6 +159,13 @@ export function renderTrack(view) {
         points: pts,
         source: 'gps',
         verified: true, // GPS runs are verified live
+        weather: weatherData ? {
+          temp: weatherData.temp,
+          condition: weatherData.condition,
+          icon: weatherData.icon,
+          windSpeed: weatherData.windSpeed,
+          humidity: weatherData.humidity
+        } : null,
         createdAt: serverTimestamp(),
       });
       
@@ -208,6 +236,7 @@ export function renderTrack(view) {
         h('div', { style: 'flex:1' }, tEl, h('small', { class: 'muted' }, ' TIME')),
         h('div', { style: 'flex:1' }, pEl, h('small', { class: 'muted' }, ' PACE /KM'))),
       ctrlRow,
+      weatherBanner,
       statusBanner));
   paint();
 }

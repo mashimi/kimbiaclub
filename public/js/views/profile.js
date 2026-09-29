@@ -103,11 +103,14 @@ export function renderProfile(view) {
         docs.slice(0, 20).forEach((a) => {
           const secs = a.durationS && a.distanceM ? a.durationS / (a.distanceM / 1000) : 0;
           const dateVal = a.startedAt?.toDate?.() || (a.startedAt ? new Date(a.startedAt) : new Date());
+          const weatherTag = a.weather ? ` · ${a.weather.temp}°C ${a.weather.icon || '⛅'}` : '';
           rl.append(h('div', { class: 'tile' },
             h('div', { class: 'av' }, (a.verified || a.source === 'gps') ? '✅' : '🏃'),
             h('div', { class: 'grow' },
               h('b', {}, `${Fmt.km(a.distanceM)} · ${Fmt.dur(a.durationS)} · ${Fmt.pace(secs)} /km`),
-              h('small', {}, `${Fmt.dt(dateVal)} · ${a.source || 'gps'}`))));
+              h('small', {}, `${Fmt.dt(dateVal)} · ${a.source || 'gps'}${weatherTag}`)),
+            a.weather ? h('div', { style: 'font-size:12px;font-weight:700;color:var(--lime);background:rgba(0,200,83,0.12);padding:4px 8px;border-radius:8px;' }, `${a.weather.temp}°C ${a.weather.icon}`) : null
+          ));
         });
       }
     }

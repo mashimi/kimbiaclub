@@ -1,9 +1,52 @@
 import { db } from '../firebase-init.js';
 import { collection, doc, onSnapshot, orderBy, query, limit, getDoc } from 'firebase/firestore';
 import { h, monthKey } from '../ui.js';
+import { fetchWeather } from '../weather.js';
 
 export function renderHome(view) {
   view.innerHTML = '';
+
+  // Weather Widget
+  const weatherEl = h('div', {
+    class: 'card',
+    style: 'background: linear-gradient(135deg, rgba(19,26,22,0.9) 0%, rgba(28,38,32,0.9) 100%); border: 1px solid var(--outline); padding: 14px 18px; margin-bottom: 20px; border-radius: 18px;'
+  },
+    h('div', { class: 'spread' },
+      h('div', { class: 'row' },
+        h('span', { style: 'font-size: 26px;' }, '🌤️'),
+        h('div', {},
+          h('b', { style: 'font-size: 14px;' }, 'Checking Tanzanian Weather...'),
+          h('div', { class: 'muted', style: 'font-size: 12px;' }, 'Fetching conditions for runners')
+        )
+      )
+    )
+  );
+
+  fetchWeather(-6.7924, 39.2083, 'Dar es Salaam').then((w) => {
+    weatherEl.innerHTML = '';
+    weatherEl.append(
+      h('div', { class: 'spread', style: 'flex-wrap: wrap; gap: 10px;' },
+        h('div', { class: 'row', style: 'gap: 12px;' },
+          h('span', { style: 'font-size: 32px;' }, w.icon),
+          h('div', {},
+            h('div', { style: 'display: flex; align-items: center; gap: 8px;' },
+              h('b', { style: 'font-size: 18px; color: #fff;' }, `${w.temp}°C`),
+              h('span', { style: 'font-size: 13px; font-weight: 700; color: var(--green);' }, w.condition)
+            ),
+            h('div', { class: 'muted', style: 'font-size: 12px; margin-top: 2px;' },
+              `📍 ${w.cityName} · 💨 Wind ${w.windSpeed} km/h · 💧 ${w.humidity}% humidity`
+            )
+          )
+        ),
+        h('div', { style: 'background: rgba(0,200,83,0.12); padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(0,200,83,0.3);' },
+          h('span', { style: 'font-size: 10px; font-weight: 800; color: var(--lime); display: block; letter-spacing: 1px;' }, 'RUNNER TIP'),
+          h('span', { style: 'font-size: 12px; font-weight: 600; color: #fff;' }, w.tip)
+        )
+      )
+    );
+  });
+
+  view.append(weatherEl);
 
   // Club of the Month banner (latest award doc)
   getDoc(doc(db, 'awards', monthKey(-1))).then((s) => {
